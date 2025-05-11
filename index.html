@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Surf And Stay | Home</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      overflow-x: hidden;
+      background-color: darkblue;
+    }
+
+    video.bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -1;
+    }
+
+    .overlay {
+      background: rgba(0,0,0,0.4);
+      width: 100%;
+      height: 100%;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 0;
+    }
+
+    .center-box {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: white;
+      z-index: 1;
+      width: 90%;
+      max-width: 800px;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px #00ffff;
+    }
+
+    .btn {
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(45deg, #00ffff, #0077ff);
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(0,255,255,0.6);
+      transition: all 0.3s ease;
+      margin: 10px;
+    }
+
+    .btn:hover {
+      transform: scale(1.1);
+      background: linear-gradient(45deg, #00ddff, #004eff);
+    }
+
+    .description {
+      margin-top: 20px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: #ddd;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+
+    @media (max-width: 600px) {
+      .btn {
+        width: 80%;
+        padding: 12px;
+      }
+      
+      .description {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Video Background with fallback image -->
+  <video class="bg" autoplay muted loop playsinline poster="https://images.unsplash.com/photo-1505228395891-9a51e7e86bf6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80">
+    <source src="https://assets.mixkit.co/videos/preview/mixkit-waves-coming-to-the-beach-5016-large.mp4" type="video/mp4" />
+    <source src="https://assets.mixkit.co/videos/preview/mixkit-waves-coming-to-the-beach-5016-large.webm" type="video/webm" />
+    Your browser does not support HTML5 video.
+  </video>
+
+  <div class="overlay"></div>
+
+  <div class="center-box">
+    <h1>Surf And Stay Booking</h1>
+    <button class="btn" onclick="location.href='combined.htm'">Book Now</button>
+    <p class="description">
+      Catch the waves and live the island life! Whether you're a first-time surfer or looking to sharpen your skills, our Surf And Stay experience blends beach adventure with cozy dorm stays, good food, and good vibes. 🌊🛏️✨
+    </p>
+  </div>
+  
+  <footer>
+    &copy; 2025 Surf And Stay Booking. All rights reserved.
+  </footer>
+</body>
+</html>

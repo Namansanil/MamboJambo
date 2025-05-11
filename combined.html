@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Surf And Stay Combo Booking</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #000428, #004e92);
+      color: white;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    select {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 1rem;
+      box-shadow: 0 0 10px rgbae(0, 255, 255, 0.2);
+      backdrop-filter: blur(6px);
+      appearance: none;
+      -webkit-appearance: none;
+      position: relative;
+    }
+    
+    select:focus {
+      outline: none;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+    }
+    
+    select option {
+      color: black;
+      background: white;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,255,255,0.3);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    label {
+      margin-top: 15px;
+      display: block;
+      font-weight: 500;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border-radius: 10px;
+      border: none;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+
+    input, select {
+      background: rgba(255,255,255,0.15);
+      color: white;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+    }
+
+    button {
+      margin-top: 25px;
+      background: linear-gradient(45deg, #00ffff, #00aaff);
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+    }
+
+    #confirmation {
+      margin-top: 20px;
+      background: rgba(0, 255, 204, 0.13);
+      padding: 15px;
+      border-radius: 10px;
+      display: none;
+      border: 1px solid rgba(0, 255, 204, 0.3);
+    }
+
+    .dorm-room {
+      margin-top: 15px;
+    }
+    
+    .dorm-room label {
+      font-weight: bold;
+      display: block;
+      margin: 10px 0 5px;
+    }
+    
+    .dorm-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .dorm-bed {
+      width: 100%;
+      aspect-ratio: 1;
+      background-color: #00bfff;
+      color: white;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.9rem;
+      box-shadow: 0 0 10px rgba(0,255,255,0.4);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    
+    .dorm-bed.non-ac {
+      background-color: #ffc107;
+      color: #333;
+    }
+    
+    .dorm-bed:hover {
+      transform: scale(1.05);
+    }
+    
+    .dorm-bed.selected {
+      background-color: #ff4d4d;
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(255, 77, 77, 0.6);
+    }
+    
+    .dorm-bed.booked {
+      background-color: #555 !important;
+      color: #999 !important;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .dorm-bed.booked::after {
+      content: "✗";
+      position: absolute;
+      color: #ff4d4d;
+      font-size: 1.5rem;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #00ffff;
+      animation: spin 1s ease-in-out infinite;
+      margin-left: 10px;
+    }
+
+    .loading-large {
+      width: 40px;
+      height: 40px;
+      margin: 20px auto;
+      display: block;
+    }
+
+    .success-message {
+      color: #4caf50;
+    }
+
+    .error-message {
+      color: #f44336;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .date-range {
+      font-size: 0.9rem;
+      color: #aaa;
+      margin-top: 5px;
+    }
+
+    /* New styles for enhancements */
+    .admin-logout {
+      background: transparent;
+      color: #ff5555;
+      border: 1px solid #ff5555;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: auto;
+      display: none;
+    }
+    .admin-logout:hover {
+      background: rgba(255, 85, 85, 0.2);
+    }
+    .session-full {
+      color: #ff6b6b;
+      font-weight: bold;
+    }
+    .session-info {
+      font-size: 0.9em;
+      color: #aaa;
+      margin-top: 5px;
+    }
+    .offline-warning {
+      color: #ffcc00;
+      text-align: center;
+      margin: 10px 0;
+      display: none;
+      padding: 10px;
+      background: rgba(255, 204, 0, 0.1);
+      border-radius: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+
+      .container {
+        padding: 20px;
+      }
+
+      .dorm-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      input, select, button {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🏄 Surf And Stay Booking</h2>
+    <div id="offlineWarning" class="offline-warning">
+      ⚠️ You are currently offline. Some features may be limited.
+    </div>
+    <form id="comboForm">
+      <label for="name">Full Name</label>
+      <input type="text" id="name" required placeholder="Your full name">
+
+      <label for="email">Email</label>
+      <input type="email" id="email" required placeholder="your@email.com">
+
+      <label for="startDate">Select Start Date:</label>
+      <input type="date" id="startDate" required>
+      <div id="dateRangeDisplay" class="date-range"></div>
+
+      <label for="packageSelect">Choose Package:</label>
+      <select id="packageSelect" required>
+        <option value="">Select Package</option>
+        <option value="3">3 Days</option>
+        <option value="5">5 Days</option>
+        <option value="7">7 Days</option>
+        <option value="10">10 Days</option>
+      </select>
+
+      <label>Select Your Dorm Bed:</label>
+      <div id="dormLayout" style="margin-bottom: 15px;"></div>
+      <input type="hidden" id="selectedDorm">
+
+      <button type="submit" id="submitBtn">Book Now</button>
+    </form>
+
+    <button id="adminLogoutBtn" class="admin-logout">
+      Admin Logout
+    </button>
+
+    <div id="confirmation"></div>
+  </div>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2fuAcLSKVX1v7kIOA1GGBSsoCLs-Moz0",
+      authDomain: "smartbooking-6c1f7.firebaseapp.com",
+      databaseURL: "https://smartbooking-6c1f7-default-rtdb.firebaseio.com",
+      projectId: "smartbooking-6c1f7",
+      storageBucket: "smartbooking-6c1f7.appspot.com",
+      messagingSenderId: "56718876049",
+      appId: "1:56718876049:web:8471e4665e780aff69ce30"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    // DOM elements
+    const form = document.getElementById("comboForm");
+    const confirmBox = document.getElementById("confirmation");
+    const submitBtn = document.getElementById("submitBtn");
+    const dateRangeDisplay = document.getElementById("dateRangeDisplay");
+    const adminLogoutBtn = document.getElementById("adminLogoutBtn");
+    const offlineWarning = document.getElementById("offlineWarning");
+
+    // Dorm data
+    const dorms = [
+      { id: "R1-B1", label: "R1-B1", room: "Room 1", ac: true },
+      { id: "R1-B2", label: "R1-B2", room: "Room 1", ac: true },
+      { id: "R1-B3", label: "R1-B3", room: "Room 1", ac: true },
+      { id: "R1-B4", label: "R1-B4", room: "Room 1", ac: true },
+      { id: "R2-B1", label: "R2-B1", room: "Room 2", ac: true },
+      { id: "R2-B2", label: "R2-B2", room: "Room 2", ac: true },
+      { id: "R2-B3", label: "R2-B3", room: "Room 2", ac: true },
+      { id: "R2-B4", label: "R2-B4", room: "Room 2", ac: true },
+      { id: "R3-B1", label: "R3-B1", room: "Room 3", ac: true },
+      { id: "R3-B2", label: "R3-B2", room: "Room 3", ac: true },
+      { id: "R3-B3", label: "R3-B3", room: "Room 3", ac: true },
+      { id: "R3-B4", label: "R3-B4", room: "Room 3", ac: true },
+      { id: "NAC-1", label: "Open-N1", room: "Open Non-AC", ac: false },
+      { id: "NAC-2", label: "Open-N2", room: "Open Non-AC", ac: false },
+    ];
+
+    // Loading state management
+    let isLoading = false;
+
+    // Online/offline detection
+    function updateOnlineStatus() {
+      offlineWarning.style.display = navigator.onLine ? 'none' : 'block';
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // Admin auth state handling
+    auth.onAuthStateChanged(user => {
+      adminLogoutBtn.style.display = user ? 'block' : 'none';
+    });
+
+    // Admin logout functionality
+    adminLogoutBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to log out as admin?')) {
+        auth.signOut();
+      }
+    });
+
+    // Date helper functions
+    function normalizeDate(dateStr) {
+      const date = new Date(dateStr);
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString().split('T')[0];
+    }
+
+    function formatDisplayDate(dateStr) {
+      return new Date(dateStr).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+
+    function hasDateOverlap(newStart, newEnd, existingStart, existingEnd) {
+      const ns = new Date(newStart);
+      const ne = new Date(newEnd);
+      const es = new Date(existingStart);
+      const ee = new Date(existingEnd);
+      return ns <= ee && ne >= es;
+    }
+
+    // Update date range display
+    function updateDateRangeDisplay() {
+      const startDate = document.getElementById("startDate").value;
+      const packageDays = document.getElementById("packageSelect").value;
+      
+      if (startDate && packageDays) {
+        const start = new Date(startDate);
+        const end = new Date(start.getTime() + (packageDays - 1) * 86400000);
+        dateRangeDisplay.textContent = `${formatDisplayDate(startDate)} - ${formatDisplayDate(end)}`;
+      } else {
+        dateRangeDisplay.textContent = "";
+      }
+    }
+
+    // Check dorm availability for specific dates
+    async function checkDormAvailabilityForDates(dormId, startDate, endDate) {
+      try {
+        if (!navigator.onLine) {
+          throw new Error("You're offline. Please check your connection.");
+        }
+        
+        const snapshot = await db.ref("bookings").orderByChild("dorm").equalTo(dormId).once("value");
+        const currentDate = normalizeDate(new Date());
+        
+        if (!snapshot.exists()) return true;
+        
+        let isAvailable = true;
+        
+        snapshot.forEach(child => {
+          const booking = child.val();
+          
+          let bookedStart, bookedEnd;
+          
+          if (booking.startDate && booking.endDate) {
+            bookedStart = booking.startDate;
+            bookedEnd = booking.endDate;
+          } else if (booking.date && booking.nights) {
+            bookedStart = booking.date;
+            bookedEnd = new Date(new Date(booking.date).getTime() + booking.nights * 86400000).toISOString().split('T')[0];
+          }
+          
+          if (bookedStart && bookedEnd) {
+            // Only consider active bookings
+            if (new Date(bookedEnd) >= new Date(currentDate)) {
+              if (hasDateOverlap(startDate, endDate, bookedStart, bookedEnd)) {
+                isAvailable = false;
+                return; // Exit early if we find any overlap
+              }
+            }
+          }
+        });
+        
+        return isAvailable;
+      } catch (error) {
+        console.error("Error checking dorm availability:", error);
+        if (!navigator.onLine) {
+          alert("⚠️ You're offline. Please reconnect to check availability.");
+        }
+        return false;
+      }
+    }
+
+    // Render dorm layout with availability
+    async function renderDormLayout() {
+      const layout = document.getElementById("dormLayout");
+      if (!layout) return;
+      
+      try {
+        isLoading = true;
+        layout.innerHTML = "<div class='loading loading-large'></div>";
+        
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        const startDate = document.getElementById("startDate").value;
+        const packageDays = parseInt(document.getElementById("packageSelect").value);
+        
+        // Only render if we have valid dates
+        if (!startDate || isNaN(packageDays)) {
+          layout.innerHTML = "<p>Please select dates first</p>";
+          return;
+        }
+        
+        const endDate = new Date(new Date(startDate).getTime() + (packageDays - 1) * 86400000).toISOString().split('T')[0];
+        
+        layout.innerHTML = "";
+        const rooms = [...new Set(dorms.map(b => b.room))];
+        
+        // Check availability for all dorms first
+        const availabilityPromises = dorms.map(async dorm => {
+          const isAvailable = await checkDormAvailabilityForDates(dorm.id, startDate, endDate);
+          return { ...dorm, available: isAvailable };
+        });
+        
+        const dormsWithAvailability = await Promise.all(availabilityPromises);
+        
+        rooms.forEach(room => {
+          const group = dormsWithAvailability.filter(d => d.room === room);
+          const wrapper = document.createElement("div");
+          wrapper.className = "dorm-room";
+          wrapper.innerHTML = `<label>${room}</label><div class="dorm-grid"></div>`;
+          const grid = wrapper.querySelector(".dorm-grid");
+          if (!grid) return;
+
+          group.forEach(dorm => {
+            const btn = document.createElement("div");
+            btn.className = "dorm-bed";
+            if (!dorm.ac) btn.classList.add("non-ac");
+            if (!dorm.available) {
+              btn.classList.add("booked");
+              btn.title = "This bed is already booked for your selected dates";
+            }
+            btn.textContent = dorm.label;
+            btn.dataset.id = dorm.id;
+            grid.appendChild(btn);
+          });
+
+          layout.appendChild(wrapper);
+        });
+
+        setupDormBedSelection();
+      } catch (error) {
+        console.error("Render error:", error);
+        layout.innerHTML = `<p class="error-message">⚠️ Error loading beds. Please refresh the page.</p>`;
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    // Setup dorm bed selection with real-time availability check
+    function setupDormBedSelection() {
+      document.querySelectorAll(".dorm-bed").forEach(bed => {
+        bed.addEventListener("click", async function() {
+          if (this.classList.contains("booked")) {
+            alert("This dorm bed is already booked for your selected dates. Please choose another one.");
+            return;
+          }
+
+          const dormId = this.dataset.id;
+          const startDate = document.getElementById("startDate").value;
+          const packageDays = parseInt(document.getElementById("packageSelect").value);
+          
+          if (!startDate || isNaN(packageDays) || packageDays < 1) {
+            alert("Please select both dates and package first");
+            return;
+          }
+          
+          const endDate = new Date(new Date(startDate).getTime() + (packageDays - 1) * 86400000).toISOString().split('T')[0];
+          
+          // Show checking state
+          const originalText = this.textContent;
+          this.innerHTML = "<span class='loading'></span>";
+          
+          try {
+            const isAvailable = await checkDormAvailabilityForDates(dormId, startDate, endDate);
+            
+            if (isAvailable) {
+              document.querySelectorAll(".dorm-bed").forEach(b => b.classList.remove("selected"));
+              this.classList.add("selected");
+              document.getElementById("selectedDorm").value = dormId;
+              this.innerHTML = originalText;
+            } else {
+              this.classList.add("booked");
+              this.style.pointerEvents = "none";
+              this.innerHTML = originalText;
+              alert("This dorm is no longer available for your selected dates. Please choose another one.");
+            }
+          } catch (error) {
+            console.error("Availability check error:", error);
+            this.innerHTML = originalText;
+            alert("Error checking availability. Please try again.");
+          }
+        });
+      });
+    }
+
+    // Show enhanced confirmation message
+    function showConfirmation(name, email, pkgDays, startDate, endDate, dorm, sessionAssignments) {
+      confirmBox.innerHTML = `
+        <h3 class="success-message">✅ Booking Confirmed for ${name}</h3>
+        <p><strong>Package:</strong> ${pkgDays} days (${formatDisplayDate(startDate)} - ${formatDisplayDate(endDate)})</p>
+        ${dorm !== "none" ? `<p><strong>Selected Dorm:</strong> ${dorm}</p>` : ''}
+        <p><strong>Surf Sessions:</strong></p>
+        <p class="session-info">(Each session has a maximum of 20 participants)</p>
+        <ul>
+          ${Object.entries(sessionAssignments).map(([d, s]) => 
+            `<li>${formatDisplayDate(d)}: ${s} ${s === 'FULL' ? '<span class="session-full">(Session Full)</span>' : ''}</li>`
+          ).join("")}
+        </ul>
+        <p>We've sent a confirmation to ${email}</p>
+      `;
+      confirmBox.style.display = "block";
+      confirmBox.scrollIntoView({ behavior: "smooth" });
+    }
+
+    // Form submission handler
+    form.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      
+      if (!navigator.onLine) {
+        alert("⚠️ You're offline. Please reconnect to complete your booking.");
+        return;
+      }
+
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const startDateInput = document.getElementById("startDate").value;
+      const pkgDays = parseInt(document.getElementById("packageSelect").value);
+      const dorm = document.getElementById("selectedDorm").value || "none";
+
+      // Validation
+      if (!name || !email || !startDateInput || isNaN(pkgDays) || pkgDays < 1) {
+        alert("❌ Please fill all required fields");
+        return;
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        alert("Please enter a valid email address");
+        return;
+      }
+      
+      const selectedDate = new Date(startDateInput);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        alert("Start date cannot be in the past");
+        return;
+      }
+
+      try {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = "Processing <span class='loading'></span>";
+        
+        confirmBox.innerHTML = "";
+        confirmBox.style.display = "none";
+        
+        const startDate = normalizeDate(startDateInput);
+        const endDate = new Date(new Date(startDate).getTime() + (pkgDays - 1) * 86400000).toISOString().split('T')[0];
+        
+        // Final availability check before booking
+        if (dorm !== "none") {
+          const isAvailable = await checkDormAvailabilityForDates(dorm, startDate, endDate);
+          if (!isAvailable) {
+            alert("⚠️ The selected dorm is no longer available for your dates. Please choose another bed.");
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = "Book Now";
+            // Refresh the dorm layout to show current availability
+            await renderDormLayout();
+            return;
+          }
+        }
+
+        const surfLessons = [];
+        const sessionAssignments = {};
+        const baseDate = new Date(startDate);
+
+        // Assign surf sessions
+        for (let i = 0; i < pkgDays; i++) {
+          const date = new Date(baseDate.getTime() + i * 86400000);
+          const dateStr = normalizeDate(date);
+
+          try {
+            const sessionPath = `sessionLimits/${dateStr}`;
+            const sessionSnap = await db.ref(sessionPath).get();
+            let counts = sessionSnap.exists() ? sessionSnap.val() : { s1: 0, s2: 0, s3: 0 };
+
+            let assigned = "s1";
+            if (dorm === "none") {
+              if (counts.s1 < 20) assigned = "s1";
+              else if (counts.s2 < 20) assigned = "s2";
+              else assigned = "s3";
+            }
+
+            if (counts[assigned] < 20) {
+              counts[assigned]++;
+              await db.ref(`${sessionPath}/${assigned}`).set(counts[assigned]);
+              sessionAssignments[dateStr] = assigned.toUpperCase();
+              surfLessons.push({ date: dateStr, session: assigned.toUpperCase() });
+            } else {
+              sessionAssignments[dateStr] = "FULL";
+            }
+          } catch (error) {
+            console.error(`Error processing session for ${dateStr}:`, error);
+            sessionAssignments[dateStr] = "ERROR";
+          }
+        }
+
+        const bookingTime = new Date().toISOString();
+
+        // Store Surf Booking
+        await db.ref("surfBookings").push({
+          name,
+          email,
+          startDate,
+          endDate,
+          packageDays: pkgDays,
+          dormStay: dorm,
+          prioritySession: dorm !== "none",
+          timestamp: bookingTime,
+          sessions: sessionAssignments
+        });
+
+        // Store Dorm Booking if needed
+        if (dorm !== "none") {
+          await db.ref("bookings").push({
+            name,
+            email,
+            dorm: dorm,
+            startDate: startDate,
+            endDate: endDate,
+            nights: pkgDays - 1,
+            timestamp: bookingTime
+          });
+        }
+
+        // Show confirmation
+        form.reset();
+        document.getElementById("selectedDorm").value = "";
+        dateRangeDisplay.textContent = "";
+        
+        showConfirmation(name, email, pkgDays, startDate, endDate, dorm, sessionAssignments);
+
+        // Refresh dorm availability
+        await renderDormLayout();
+      } catch (error) {
+        console.error("Booking error:", error);
+        confirmBox.innerHTML = `
+          <p class="error-message">❌ Booking failed</p>
+          <p>${error.message || "Please try again later"}</p>
+        `;
+        confirmBox.style.display = "block";
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = "Book Now";
+      }
+    });
+
+    // Real-time dorm updates
+    db.ref("bookings").on("value", () => {
+      if (!isLoading) {
+        renderDormLayout();
+      }
+    });
+
+    // Initialize the page
+    document.addEventListener("DOMContentLoaded", function() {
+      const today = normalizeDate(new Date());
+      document.getElementById("startDate").min = today.split('T')[0];
+      document.getElementById("startDate").value = today.split('T')[0];
+      
+      // Event listeners for date changes
+      document.getElementById("startDate").addEventListener("change", function() {
+        updateDateRangeDisplay();
+        renderDormLayout();
+      });
+      
+      document.getElementById("packageSelect").addEventListener("change", function() {
+        updateDateRangeDisplay();
+        renderDormLayout();
+      });
+
+      // Initial render
+      renderDormLayout();
+    });
+
+    // Optional: Cleanup expired bookings
+    async function cleanupExpiredBookings() {
+      const currentDate = new Date();
+      const snapshot = await db.ref("bookings").once("value");
+      const updates = {};
+      
+      snapshot.forEach(child => {
+        const booking = child.val();
+        if (booking.endDate) {
+          const endDate = new Date(booking.endDate);
+          if (endDate < currentDate) {
+            updates[child.key] = null;
+          }
+        }
+      });
+      
+      if (Object.keys(updates).length > 0) {
+        await db.ref("bookings").update(updates);
+      }
+    }
+  </script>
+</body>
+</html>

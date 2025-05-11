@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #000428, #004e92);
+      color: white;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    /* Add admin logout button styles */
+    .admin-logout {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      padding: 8px 15px;
+      background: #d9534f;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      z-index: 1000;
+      display: none;
+    }
+
+    .admin-logout:hover {
+      background: #c9302c;
+    }
+
+    /* Add Font Awesome */
+    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+
+    /* Rest of your existing styles... */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .tabs button {
+      padding: 10px 20px;
+      border: none;
+      background-color: #00ffff;
+      color: black;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .tabs button.active {
+      background-color: #0077ff;
+      color: white;
+    }
+
+    .table-container {
+      display: none;
+    }
+
+    .table-container.active {
+      display: block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    th {
+      background-color: #00ffff22;
+      color: #00ffff;
+    }
+
+    .delete-btn {
+      background: #ff4d4d;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .download-btn {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background-color: #00ffcc;
+      border: none;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #00ffff;
+      animation: spin 1s ease-in-out infinite;
+      margin-left: 10px;
+    }
+
+    /* New session display styles */
+    .session-container {
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 5px;
+      background: rgba(0,0,0,0.1);
+      border-radius: 5px;
+    }
+    .session-day {
+      margin: 3px 0;
+      padding: 3px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .session-day.missing {
+      color: #ff6b6b;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+      table {
+        font-size: 0.8rem;
+      }
+      th, td {
+        padding: 5px;
+      }
+      .session-container {
+        max-height: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h1>📊 Admin Panel</h1>
+<button id="adminLogoutBtn" class="admin-logout">
+  <i class="fas fa-sign-out-alt"></i> Logout
+</button>
+
+<!-- Rest of your existing HTML... -->
+<div class="tabs">
+  <button id="dormTab" class="active" onclick="switchTab('dorm')">Dorm Bookings</button>
+  <button id="surfTab" onclick="switchTab('surf')">Surf Bookings</button>
+</div>
+
+<div id="dormTable" class="table-container active">
+  <h3>Dorm Bookings</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Dates</th>
+        <th>Nights</th>
+        <th>Dorm</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="dormBody"><tr><td colspan="6">Loading...</td></tr></tbody>
+  </table>
+  <button class="download-btn" onclick="exportTableToCSV('dorm')">Export Dorm Bookings</button>
+</div>
+
+<div id="surfTable" class="table-container">
+  <h3>Surf Bookings</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Booking Dates</th>
+        <th>Nights</th>
+        <th>Dorm</th>
+        <th>Sessions</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="surfBody"><tr><td colspan="7">Loading...</td></tr></tbody>
+  </table>
+  <button class="download-btn" onclick="exportTableToCSV('surf')">Export Surf Bookings</button>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+<script>
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyA2fuAcLSKVX1v7kIOA1GGBSsoCLs-Moz0",
+    authDomain: "smartbooking-6c1f7.firebaseapp.com",
+    databaseURL: "https://smartbooking-6c1f7-default-rtdb.firebaseio.com",
+    projectId: "smartbooking-6c1f7",
+    storageBucket: "smartbooking-6c1f7.appspot.com",
+    messagingSenderId: "56718876049",
+    appId: "1:56718876049:web:8471e4665e780aff69ce30"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const auth = firebase.auth();
+
+  // Session timeout functionality
+  let idleTimer;
+  function startSessionTimer() {
+    resetIdleTimer();
+    window.addEventListener('mousemove', resetIdleTimer);
+    window.addEventListener('keypress', resetIdleTimer);
+  }
+
+  function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      auth.signOut();
+      alert('Session expired due to inactivity');
+    }, 30 * 60 * 1000); // 30 minutes
+  }
+
+  // Check authentication state with enhanced logout
+  auth.onAuthStateChanged(user => {
+    const logoutBtn = document.getElementById('adminLogoutBtn');
+    
+    if (user) {
+      logoutBtn.style.display = 'block';
+      loadData();
+      cleanupExpiredBookings();
+      startSessionTimer();
+      
+      logoutBtn.onclick = async () => {
+        try {
+          const confirmLogout = confirm('Are you sure you want to logout?');
+          if (confirmLogout) {
+            // Log admin activity
+            await db.ref('adminLogs').push({
+              action: 'logout',
+              adminId: user.uid,
+              timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            await auth.signOut();
+            window.location.href = "login.htm";
+          }
+        } catch (error) {
+          console.error('Logout error:', error);
+          alert('Logout failed: ' + error.message);
+        }
+      };
+    } else {
+      logoutBtn.style.display = 'none';
+      window.location.href = "login.htm";
+    }
+  });
+
+  // Rest of your existing JavaScript functions...
+  // Date handling functions
+  function normalizeDate(dateStr) {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  function formatDisplayDate(date) {
+    if (!date || isNaN(date.getTime())) return 'Invalid date';
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  }
+
+  function getBookingDateInfo(booking) {
+    const startDate = normalizeDate(booking.startDate);
+    const endDate = normalizeDate(booking.endDate);
+    
+    if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return {
+        valid: false,
+        message: 'Invalid date range'
+      };
+    }
+
+    const nights = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24));
+    return {
+      valid: true,
+      startDate,
+      endDate,
+      nights,
+      display: `${formatDisplayDate(startDate)} - ${formatDisplayDate(endDate)}`
+    };
+  }
+
+  // Generate session display aligned with booking dates
+  function generateSessionDisplay(booking, dateInfo) {
+    const container = document.createElement('div');
+    container.className = 'session-container';
+    
+    if (!dateInfo.valid) {
+      container.textContent = 'Invalid booking dates';
+      return container;
+    }
+
+    if (!booking.sessions || typeof booking.sessions !== 'object') {
+      container.textContent = 'No sessions assigned';
+      return container;
+    }
+
+    // Generate all dates in the booking range
+    const currentDate = new Date(dateInfo.startDate);
+    while (currentDate <= dateInfo.endDate) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      const sessionDay = document.createElement('div');
+      sessionDay.className = 'session-day';
+      
+      if (booking.sessions[dateStr]) {
+        sessionDay.textContent = `${formatDisplayDate(currentDate)}: ${booking.sessions[dateStr]}`;
+      } else {
+        sessionDay.textContent = `${formatDisplayDate(currentDate)}: MISSING`;
+        sessionDay.classList.add('missing');
+      }
+      
+      container.appendChild(sessionDay);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return container;
+  }
+
+  // Tabs
+  function switchTab(tab) {
+    document.getElementById("dormTab").classList.remove("active");
+    document.getElementById("surfTab").classList.remove("active");
+    document.getElementById("dormTable").classList.remove("active");
+    document.getElementById("surfTable").classList.remove("active");
+
+    if (tab === "dorm") {
+      document.getElementById("dormTab").classList.add("active");
+      document.getElementById("dormTable").classList.add("active");
+    } else {
+      document.getElementById("surfTab").classList.add("active");
+      document.getElementById("surfTable").classList.add("active");
+    }
+  }
+
+  // Load all data
+  function loadData() {
+    // Load dorm bookings
+    db.ref("bookings").once("value").then(snapshot => {
+      const tbody = document.getElementById("dormBody");
+      tbody.innerHTML = "";
+      
+      if (!snapshot.exists()) {
+        tbody.innerHTML = "<tr><td colspan='6'>No dorm bookings found</td></tr>";
+        return;
+      }
+
+      snapshot.forEach(child => {
+        const b = child.val();
+        const dateInfo = getBookingDateInfo(b);
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${b.name || 'N/A'}</td>
+          <td>${b.email || 'N/A'}</td>
+          <td>${dateInfo.valid ? dateInfo.display : 'Invalid dates'}</td>
+          <td>${dateInfo.valid ? dateInfo.nights : 'N/A'}</td>
+          <td>${b.dorm || 'N/A'}</td>
+          <td><button class="delete-btn" onclick="deleteBooking('${child.key}', 'bookings')">Delete</button></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }).catch(error => {
+      console.error("Error loading dorm bookings:", error);
+      document.getElementById("dormBody").innerHTML = `<tr><td colspan="6">Error loading data</td></tr>`;
+    });
+
+    // Load surf bookings with perfect date alignment
+    db.ref("surfBookings").once("value").then(snapshot => {
+      const tbody = document.getElementById("surfBody");
+      tbody.innerHTML = "";
+      
+      if (!snapshot.exists()) {
+        tbody.innerHTML = "<tr><td colspan='7'>No surf bookings found</td></tr>";
+        return;
+      }
+
+      snapshot.forEach(child => {
+        const booking = child.val();
+        const dateInfo = getBookingDateInfo(booking);
+        
+        const row = document.createElement("tr");
+        
+        // Create session display cell
+        const sessionCell = document.createElement("td");
+        sessionCell.appendChild(generateSessionDisplay(booking, dateInfo));
+        
+        row.innerHTML = `
+          <td>${booking.name || 'N/A'}</td>
+          <td>${booking.email || 'N/A'}</td>
+          <td>${dateInfo.valid ? dateInfo.display : 'Invalid dates'}</td>
+          <td>${dateInfo.valid ? dateInfo.nights : 'N/A'}</td>
+          <td>${booking.dormStay || 'None'}</td>
+        `;
+        
+        row.appendChild(sessionCell);
+        row.innerHTML += `<td><button class="delete-btn" onclick="deleteBooking('${child.key}', 'surfBookings')">Delete</button></td>`;
+        
+        tbody.appendChild(row);
+      });
+    }).catch(error => {
+      console.error("Error loading surf bookings:", error);
+      document.getElementById("surfBody").innerHTML = `<tr><td colspan="7">Error loading data</td></tr>`;
+    });
+  }
+
+  // Delete entry
+  function deleteBooking(id, path) {
+    if (!confirm("Are you sure you want to delete this booking?")) return;
+    
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = "<span class='loading'></span>";
+    
+    db.ref(path + "/" + id).remove()
+      .then(() => {
+        loadData();
+      })
+      .catch(error => {
+        alert("Error deleting booking: " + error.message);
+        btn.disabled = false;
+        btn.innerHTML = "Delete";
+      });
+  }
+
+  // Export CSV
+  function exportTableToCSV(type) {
+    const rows = [];
+    const headers = Array.from(document.querySelector(`#${type}Table table thead`).rows[0].cells)
+      .map(th => `"${th.innerText}"`);
+    rows.push(headers.join(","));
+
+    const dataRows = document.querySelectorAll(`#${type}Table table tbody tr`);
+    dataRows.forEach(tr => {
+      const row = Array.from(tr.cells).map(td => {
+        // Handle session container specially
+        if (td.querySelector('.session-container')) {
+          return `"${td.textContent.replace(/\n/g, ' | ')}"`;
+        }
+        return `"${td.innerText.replace(/"/g, '""')}"`;
+      });
+      rows.push(row.join(","));
+    });
+
+    const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${type}_bookings_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  }
+
+  // Cleanup expired bookings
+  async function cleanupExpiredBookings() {
+    const currentDate = new Date();
+    const snapshot = await db.ref("bookings").once("value");
+    const updates = {};
+    
+    snapshot.forEach(child => {
+      const booking = child.val();
+      if (booking.endDate) {
+        const endDate = new Date(booking.endDate);
+        if (endDate < currentDate) {
+          updates[child.key] = null;
+        }
+      }
+    });
+    
+    if (Object.keys(updates).length > 0) {
+      await db.ref("bookings").update(updates);
+    }
+  }
+</script>
+</body>
+</html>
